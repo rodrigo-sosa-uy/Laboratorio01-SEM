@@ -25,6 +25,7 @@
 ///////////////////////////// Librerías /////////////////////////////
 #include <avr/io.h>
 #include <util/delay.h>
+#include "libraries/adc.h"
 /////////////////////////////////////////////////////////////////////
 
 /////////////////////////// Definiciones ////////////////////////////
@@ -47,11 +48,14 @@ int main(void){
 	
 	// Habilita Pull-up interno
 	PORTD = ((1 << BUT1) | (1 << BUT2) | (1 << BUT3) | (1 << BUT4));
-		
+	
+	// Inicializa el ADC
+	ADC_init();
+	
 	// Variables
 	uint16_t humedad;
 	
     while(1){
-
+		
     }
 }
