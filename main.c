@@ -21,12 +21,8 @@
 	//////////////////////////////////////////////////
 
 #define F_CPU 16000000UL
-
-///////////////////////////// Librerías /////////////////////////////
 #include <avr/io.h>
 #include <util/delay.h>
-#include "libraries/adc.h"
-/////////////////////////////////////////////////////////////////////
 
 /////////////////////////// Definiciones ////////////////////////////
 #define HUM1 PORTC0
@@ -37,8 +33,102 @@
 #define BUT4 PORTD3
 #define BUT_PORT PIND
 
+#define D4 PORTB3
+#define D5 PORTB2
+#define D6 PORTB1
+#define D7 PORTB0
+#define EN PORTB4
+#define RS PORTB5
+
 #define REL1 PORTD6
 /////////////////////////////////////////////////////////////////////
+
+///////////////////////////// Variables /////////////////////////////
+uint8_t humedad;
+
+uint16_t cnt_tiempo_riego = 0;
+uint16_t cnt_tiempo_valve = 0;
+uint16_t cnt_trigg_lcd = 0;
+/////////////////////////////////////////////////////////////////////
+
+///////////////////////// Modos y estados ///////////////////////////
+typedef enum{
+	OFF,
+	ON
+} STATE;
+
+STATE estado = OFF;
+
+uint8_t t_riego = 0;	// (0: 1hr, 1: 3hrs, 2: 5hrs)
+uint8_t t_valve = 0;	// (0: 10s, 1: 15s, 2: 20s)
+uint8_t hum_min = 0;	// (0: 20%, 1: 30%, 2: 40%)
+/////////////////////////////////////////////////////////////////////
+
+///////////////////////////// Librerías /////////////////////////////
+#include "libraries/adc.h"
+#include "libraries/configure.h"
+#include "libraries/controller.h"
+#include "libraries/display.h"
+/////////////////////////////////////////////////////////////////////
+
+//////////////////////// Máquina de estados /////////////////////////
+void F_OFF();
+void F_ON();
+
+typedef struct{
+	void (*func)();
+} FSM;
+
+FSM SMHRA[] = {	// Sistema de Monitoreo de Humedad y Riego Automatico
+	{F_OFF},
+	{F_ON}
+};
+/////////////////////////////////////////////////////////////////////
+
+///////////////////////////// Banderas //////////////////////////////
+uint8_t off_fg = 1;
+uint8_t on_fg = 1;
+/////////////////////////////////////////////////////////////////////
+
+void F_OFF(){
+	_delay_ms(100);
+	if(off_fg){
+		trigger_lcd();
+		off_fg = 0;
+	}
+	
+	if((BUT_PORT & (1 << BUT1)) != 1){
+		estado = ON;
+		off_fg = 1;
+	}
+}
+
+void F_ON(){
+	_delay_ms(100);
+	if(on_fg || (cnt_trigg_lcd >= 100)){
+		trigger_lcd();
+		on_fg = 0;
+		cnt_trigg_lcd = 0;
+	}
+
+	humedad = map_ph(ADC_read(HUM1));
+	
+	trigger_riego();
+	trigger_humedad();
+	
+	t_riego = config_t_riego(t_riego);
+	t_valve = config_t_valve(t_valve);
+	hum_min = config_hum_min(hum_min);
+
+	cnt_trigg_lcd += 1;
+	
+	if((BUT_PORT & (1 << BUT1)) != 1){
+		estado = OFF;
+		cnt_tiempo_valve = 0;
+		cnt_tiempo_riego = 0;
+		on_fg = 1;
+	}
+}
 
 int main(void){
 	// Define entradas y salidas
@@ -51,11 +141,11 @@ int main(void){
 	
 	// Inicializa el ADC
 	ADC_init();
-	
-	// Variables
-	uint16_t humedad;
+
+	// Inicializa el display
+	LCD_Init();
 	
     while(1){
-		
+		(*SMHRA[estado].func)();
     }
 }
