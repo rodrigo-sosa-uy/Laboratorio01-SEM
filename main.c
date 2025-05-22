@@ -29,8 +29,8 @@
 
 #define BUT1 PORTD2
 #define BUT2 PORTD3
-#define BUT3 PORTD5
-#define BUT4 PORTD3
+#define BUT3 PORTD4
+#define BUT4 PORTD5
 #define BUT_PORT PIND
 
 #define D4 PORTB3
@@ -64,14 +64,14 @@ uint8_t t_valve = 0;	// (0: 10s, 1: 15s, 2: 20s)
 uint8_t hum_min = 0;	// (0: 20%, 1: 30%, 2: 40%)
 /////////////////////////////////////////////////////////////////////
 
-///////////////////////////// Librerías /////////////////////////////
+///////////////////////////// Librerias /////////////////////////////
 #include "libraries/adc.h"
 #include "libraries/configure.h"
 #include "libraries/controller.h"
 #include "libraries/display.h"
 /////////////////////////////////////////////////////////////////////
 
-//////////////////////// Máquina de estados /////////////////////////
+//////////////////////// Maquina de estados /////////////////////////
 void F_OFF();
 void F_ON();
 
@@ -93,19 +93,24 @@ uint8_t on_fg = 1;
 void F_OFF(){
 	_delay_ms(100);
 	if(off_fg){
+		//Serial.println("Modo OFF");
+		//Serial.flush();
 		trigger_lcd();
 		off_fg = 0;
 	}
 	
-	if((BUT_PORT & (1 << BUT1)) != 1){
+	if((BUT_PORT & (1 << BUT1)) == 0){
 		estado = ON;
 		off_fg = 1;
+		_delay_ms(100);
 	}
 }
 
 void F_ON(){
 	_delay_ms(100);
-	if(on_fg || (cnt_trigg_lcd >= 100)){
+	if(on_fg || (cnt_trigg_lcd >= 200)){
+		//Serial.println("Modo ON");
+		//Serial.flush();
 		trigger_lcd();
 		on_fg = 0;
 		cnt_trigg_lcd = 0;
@@ -114,7 +119,7 @@ void F_ON(){
 	humedad = map_ph(ADC_read(HUM1));
 	
 	trigger_riego();
-	trigger_humedad();
+	//trigger_humedad(); para que no triggeree por detectar poca humedad
 	
 	t_riego = config_t_riego(t_riego);
 	t_valve = config_t_valve(t_valve);
@@ -122,17 +127,20 @@ void F_ON(){
 
 	cnt_trigg_lcd += 1;
 	
-	if((BUT_PORT & (1 << BUT1)) != 1){
+	if((BUT_PORT & (1 << BUT1)) == 0){
 		estado = OFF;
 		cnt_tiempo_valve = 0;
 		cnt_tiempo_riego = 0;
 		on_fg = 1;
+		_delay_ms(100);
 	}
 }
 
 int main(void){
+	//Serial.begin(9600);
+
 	// Define entradas y salidas
-    DDRB = 0xFF;
+	DDRB = 0xFF;
 	DDRC = 0x00;
 	DDRD = 0x40;
 	
@@ -143,9 +151,9 @@ int main(void){
 	ADC_init();
 
 	// Inicializa el display
-	LCD_Init();
+	//lcd.begin(16,2);
 	
-    while(1){
+	while(1){
 		(*SMHRA[estado].func)();
-    }
+	}
 }

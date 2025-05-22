@@ -6,6 +6,9 @@ void trigger_valve(){
 			PORTD |= (1 << REL1);
 			} else{
 			PORTD &= ~(1 << REL1);
+			//Serial.print("Tiempo Riego: "); Serial.println(cnt_tiempo_riego);
+			//Serial.print("Tiempo Valve: "); Serial.println(cnt_tiempo_valve);
+			//Serial.flush();
 			cnt_tiempo_valve = 0;
 			cnt_tiempo_riego = 0;
 		}
