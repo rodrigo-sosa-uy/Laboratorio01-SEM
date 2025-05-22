@@ -33,12 +33,15 @@
 #define BUT4 PORTD5
 #define BUT_PORT PIND
 
+#define PCF8574	0x27
+#define LCD_DATA_PORT PORTB // Puerto de datos del LCD (DB4-DB7)
+#define LCD_CTRL_PORT PORTB // Puerto de control del LCD (RS, EN)
 #define D4 PORTB3
 #define D5 PORTB2
 #define D6 PORTB1
 #define D7 PORTB0
-#define EN PORTB4
-#define RS PORTB5
+#define LCD_EN PORTB4
+#define LCD_RS PORTB5
 
 #define REL1 PORTD6
 /////////////////////////////////////////////////////////////////////
@@ -65,6 +68,7 @@ uint8_t hum_min = 0;	// (0: 20%, 1: 30%, 2: 40%)
 /////////////////////////////////////////////////////////////////////
 
 ///////////////////////////// Librerias /////////////////////////////
+#include "libraries/lcd_i2c.h"
 #include "libraries/adc.h"
 #include "libraries/configure.h"
 #include "libraries/controller.h"
@@ -151,7 +155,8 @@ int main(void){
 	ADC_init();
 
 	// Inicializa el display
-	//lcd.begin(16,2);
+	twi_init();								
+	twi_lcd_init();								
 	
 	while(1){
 		(*SMHRA[estado].func)();

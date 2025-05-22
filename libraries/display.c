@@ -1,49 +1,49 @@
 #include "display.h"
 
 void display_mode(){
-	//lcd.print("M:");
+	twi_lcd_msg("----M:");
 	if(estado == OFF){
-		//lcd.print("OFF");
+		twi_lcd_msg("OFF");
 	} else{
-		//lcd.print("ON");
+		twi_lcd_msg("ON ");
 	}
 }
 
 void display_riego(){
 	if(estado == ON){
-		//lcd.print("-Riego:");
+		twi_lcd_msg(" Riego:");
 		if(t_riego == 0){
-			//lcd.print("1hr");
+			twi_lcd_msg("1hr");
 		} else if(t_riego == 1){
-			//lcd.print("3hrs");
+			twi_lcd_msg("3hrs");
 		} else{
-			//lcd.print("5hrs");
+			twi_lcd_msg("5hrs");
 		}
 	}
 }
 
 void display_valve(){
 	if(estado == ON){
-		//lcd.print("Valv:");
+		twi_lcd_msg("Vlv:");
 		if(t_riego == 0){
-			//lcd.print("10s");
+			twi_lcd_msg("10s");
 		} else if(t_riego == 1){
-			//lcd.print("15s");
+			twi_lcd_msg("15s");
 		} else{
-			//lcd.print("20s");
+			twi_lcd_msg("20s");
 		}
 	}
 }
 
 void display_humedad(){
 	if(estado == ON){
-		//lcd.print("-Hmin:");
+		twi_lcd_msg("-Hmin:");
 		if(t_riego == 0){
-			//lcd.print("20%");
+			twi_lcd_msg("20%");
 		} else if(t_riego == 1){
-			//lcd.print("30%");
+			twi_lcd_msg("30%");
 		} else{
-			//lcd.print("40%");
+			twi_lcd_msg("40%");
 		}
 		//LCD_Char('-');
 		//LCD_Char(humedad);
@@ -52,12 +52,12 @@ void display_humedad(){
 }
 
 void trigger_lcd(){
-	//lcd.clear();
+	twi_lcd_clear();
 
-	//lcd.setCursor(0,0);
+	twi_lcd_cmd(0x80);				//--- Row 1 Column 1 Address
 	display_mode();
 	display_riego();
-	//lcd.setCursor(0,1);
+	twi_lcd_cmd(0xC0);				//--- Row 2 Column 1 Address
 	display_valve();
 	display_humedad();
 }
